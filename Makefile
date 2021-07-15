@@ -9,7 +9,9 @@ vobjs = $(srcs:.v=.vo)
 
 default: $(targets)
 all: $(targets)
-pds.vo: equiv.vo stack.vo
+
+pds.vo:   equiv.vo stack.vo
+stack.vo: equiv.vo
 
 doc: $(vobjs)
 	test -d $(docdir) || mkdir $(docdir)
