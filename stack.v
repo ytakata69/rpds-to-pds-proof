@@ -56,12 +56,6 @@ Definition not_contain d (cell: D * Theta) :=
     (_, theta) => forall i, theta i <> d
   end.
 
-Axiom stack_has_outside_data :
-  forall (theta: Theta) (e: D) (u: Stack),
-  exists d : D,
-    d <> e /\ (forall i, theta i <> d) /\
-    Forall (not_contain d) u.
-
 Definition is_proper_stack (stack : Stack) :=
   let is_proper_cell cell :=
     match cell with (z, theta) => exists i, z = theta i end

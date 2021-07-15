@@ -78,9 +78,6 @@ Axiom Theta_extensionality :
   forall theta theta' : Theta,
     (forall i, theta i = theta' i) -> theta = theta'.
 
-Axiom outside_data_exists :
-  forall (theta : Theta) e, exists d, d <> e /\ forall i, theta i <> d.
-
 (* Construct a phi from theta, d, theta' *)
 Definition phi_matches (theta : Theta) (d : D) (theta' : Theta) : Phi :=
   fun x y : register =>
