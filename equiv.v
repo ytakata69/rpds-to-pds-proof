@@ -19,12 +19,12 @@ Definition X_ (xi : nat + Top) :=
       
 Definition Phi := register -> register -> Prop.
 
-Definition is_reflexive  (phi : Phi) : Prop := forall x, phi x x.
-Definition is_symmetric  (phi : Phi) : Prop := forall x y, phi x y -> phi y x.
-Definition is_transitive (phi : Phi) : Prop :=
-  forall x y z, phi x y -> phi y z -> phi x z.
-Definition is_equiv_rel   (phi : Phi) : Prop :=
-  is_reflexive phi /\ is_symmetric phi /\ is_transitive phi.
+Class is_equiv_rel (phi : Phi) :=
+  {
+    is_reflexive  : forall x, phi x x;
+    is_symmetric  : forall x y, phi x y -> phi y x;
+    is_transitive : forall x y z, phi x y -> phi y z -> phi x z
+  }.
 
 Axiom Phi_extensionality :
   forall phi phi' : Phi,
@@ -137,7 +137,7 @@ Definition lat (phi : Phi) : Phi :=
 
 (* models *)
 
-Class Models (A B : Type) := models : A -> B -> Prop.
+Class Models (A B : Type) := { models : A -> B -> Prop }.
 Notation "S '|=' T" := (models S T) (at level 59).
 
 Instance two_Theta_D_models_Phi : Models (Theta * D * Theta) Phi :=
@@ -208,18 +208,14 @@ Lemma phi_matches_is_equiv_rel :
   is_equiv_rel (phi_matches theta e theta').
 Proof.
   intros theta theta' e.
-  unfold is_equiv_rel.
-  split; [ | split].
+  split.
   - (* is_reflexive *)
-    unfold is_reflexive.
     intros x.
     case x; unfold phi_matches; auto.
   - (* is_symmetric *)
-    unfold is_symmetric.
     intros x y.
     case x, y; unfold phi_matches; auto.
   - (* is_transitive *)
-    unfold is_transitive.
     intros x y z.
     case x, y, z; unfold phi_matches;
     intros H1 H2; try rewrite H1; auto.
@@ -248,8 +244,7 @@ Local Lemma meanings_of_Phi_eq_j_1 :
 Proof.
   intros theta theta' e j.
   intros [phi [Heq [Hphi Hmo]]].
-  unfold is_equiv_rel in Heq.
-  destruct Heq as [Pref [Psym Ptra]].
+  destruct Heq as [Pref Psym Ptra].
   unfold Phi_eq_j in Hphi.
   destruct Hphi as [HphiT Hphi].
   unfold models in Hmo;
@@ -342,10 +337,8 @@ Proof.
   intros [P1eq P2eq].
   intros [Hco1 Hphi1] [Hco2 Hphi2].
 
-  unfold is_equiv_rel in P1eq.
-  destruct P1eq as [P1ref [P1sym P1tra]].
-  unfold is_equiv_rel in P2eq.
-  destruct P2eq as [P2ref [P2sym P2tra]].
+  destruct P1eq as [P1ref P1sym P1tra].
+  destruct P2eq as [P2ref P2sym P2tra].
 
   unfold composable in Hco1.
   unfold composable in Hco2.
@@ -511,19 +504,15 @@ Lemma phi_to_Phi_eq_j_is_equiv_rel :
   is_equiv_rel (phi_to_Phi_eq_j j phi).
 Proof.
   intros j phi.
-  intros [Pref [Psym Ptra]].
-  unfold is_equiv_rel.
-  split; [ | split].
+  intros [Pref Psym Ptra].
+  split.
   - (* is_reflexive *)
-    unfold is_reflexive.
     intros x.
     case x; unfold phi_to_Phi_eq_j; auto.
   - (* is_symmetric *)
-    unfold is_symmetric.
     intros x y.
     case x, y; unfold phi_to_Phi_eq_j; auto.
   - (* is_transitive *)
-    unfold is_transitive.
     intros x y z.
     case x, y, z; unfold phi_to_Phi_eq_j;
     try apply Ptra; auto.
@@ -548,7 +537,7 @@ Lemma phi_to_Phi_eq_j_is_Phi_eq_j :
   Phi_eq_j j (phi_to_Phi_eq_j j phi).
 Proof.
   intros j phi.
-  intros [Pref [Psym Ptra]].
+  intros [Pref Psym Ptra].
   unfold Phi_eq_j.
   split.
   - (* phi_to_Phi_eq_j j phi Xtop (X j) *)
@@ -601,12 +590,10 @@ Lemma composition_is_equiv_rel :
   is_equiv_rel (composition phi1 phi2).
 Proof.
   intros phi1 phi2 [P1eq P2eq] Hc.
-  unfold is_equiv_rel.
-  destruct P1eq as [P1ref [P1sym P1tra]].
-  destruct P2eq as [P2ref [P2sym P2tra]].
-  split; [| split].
+  destruct P1eq as [P1ref P1sym P1tra].
+  destruct P2eq as [P2ref P2sym P2tra].
+  split.
   - (* is_reflexive *)
-  unfold is_reflexive.
   intros x.
   unfold composition.
   case x.
@@ -614,7 +601,6 @@ Proof.
   + intros i; apply P2ref.
   + apply P1ref.
   - (* is_symmetric *)
-  unfold is_symmetric.
   intros x y.
   unfold composition.
   case x, y;
@@ -623,7 +609,6 @@ Proof.
   exists l;
   auto.
   - (* is_trasitive *)
-  unfold is_transitive.
   intros x y z.
   unfold composition.
   case x.
@@ -732,12 +717,10 @@ Lemma compositionT_is_equiv_rel :
   is_equiv_rel (compositionT phi1 phi2).
 Proof.
   intros phi1 phi2 [P1eq P2eq] Hc.
-  unfold is_equiv_rel.
-  destruct P1eq as [P1ref [P1sym P1tra]].
-  destruct P2eq as [P2ref [P2sym P2tra]].
-  split; [| split].
+  destruct P1eq as [P1ref P1sym P1tra].
+  destruct P2eq as [P2ref P2sym P2tra].
+  split.
   - (* is_reflexive *)
-  unfold is_reflexive.
   intros x.
   unfold composition.
   case x.
@@ -745,7 +728,6 @@ Proof.
   + intros i; apply P2ref.
   + apply P1ref.
   - (* is_symmetric *)
-  unfold is_symmetric.
   intros x y.
   unfold compositionT.
   case x, y;
@@ -754,7 +736,6 @@ Proof.
   try exists l;
   auto.
   - (* is_trasitive *)
-  unfold is_transitive.
   intros x y z.
   unfold compositionT.
   case x.
@@ -1028,8 +1009,8 @@ Lemma compositionT_is_composableT_2 :
 Proof.
   intros phi1 phi2 phi3.
   intros EQ1 EQ2 Hc1.
-  destruct EQ1 as [P1ref [P1sym P1tra]].
-  destruct EQ2 as [_ [P2sym P2tra]].
+  destruct EQ1 as [P1ref P1sym P1tra].
+  destruct EQ2 as [_ P2sym P2tra].
   unfold composableT.
   unfold composable.
   unfold compositionT.
@@ -1071,8 +1052,8 @@ Lemma compositionT_is_assoc :
 Proof.
   intros phi1 phi2 phi3.
   intros EQ1 EQ2 Hc1.
-  destruct EQ1 as [P1ref [_ P1tra]].
-  destruct EQ2 as [P2ref _].
+  destruct EQ1 as [P1ref _ P1tra].
+  destruct EQ2 as [P2ref _ _].
   apply Phi_extensionality.
   intros x y.
   split.
@@ -1218,7 +1199,7 @@ Lemma meanings_of_composition :
 Proof.
   intros theta1 theta2 theta3 d1 d2 phi1 phi2.
   intros P1eq.
-  destruct P1eq as [_ [P1sym _]].
+  destruct P1eq as [_ P1sym _].
   intros F H1 H2.
   unfold freshness_p in F.
   destruct F as [F1 F2].
@@ -1289,8 +1270,8 @@ Lemma meanings_of_compositionT :
 Proof.
   intros theta1 theta2 theta3 d1 phi1 phi2.
   intros P1eq P2eq.
-  destruct P1eq as [P1ref [P1sym _]].
-  destruct P2eq as [_ [P2sym _]].
+  destruct P1eq as [P1ref P1sym _].
+  destruct P2eq as [_ P2sym _].
   intros F.
   unfold weak_freshness_p in F.
   unfold models.
@@ -1380,11 +1361,9 @@ Lemma lat_is_equiv_rel :
   is_equiv_rel phi -> is_equiv_rel (lat phi).
 Proof.
   intros phi Heq_phi.
-  destruct Heq_phi as [Href [Hsym Htra]].
-  unfold is_equiv_rel.
-  split; [| split].
+  destruct Heq_phi as [Href Hsym Htra].
+  split.
   - (* is_reflexive (lat phi) *)
-  unfold is_reflexive.
   intros x.
   case x.
   + intro i.
@@ -1393,7 +1372,6 @@ Proof.
   + now unfold lat.
   + now unfold lat.
   - (* is_symmetric (lat phi) *)
-  unfold is_symmetric.
   intros x y.
   case x.
   + intro i. case y.
@@ -1406,7 +1384,6 @@ Proof.
   now unfold lat.
   + case y; now unfold lat.
   - (* is_transitive (lat phi) *)
-  unfold is_transitive.
   intros x y z.
   case x.
   + intro i. case y.
