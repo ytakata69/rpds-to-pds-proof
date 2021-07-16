@@ -22,7 +22,7 @@ Definition Phi := register -> register -> Prop.
 Definition is_reflexive  (phi : Phi) : Prop := forall x, phi x x.
 Definition is_symmetric  (phi : Phi) : Prop := forall x y, phi x y -> phi y x.
 Definition is_transitive (phi : Phi) : Prop :=
-  forall x y z, phi x y /\ phi y z -> phi x z.
+  forall x y z, phi x y -> phi y z -> phi x z.
 Definition is_equiv_rel   (phi : Phi) : Prop :=
   is_reflexive phi /\ is_symmetric phi /\ is_transitive phi.
 
@@ -222,7 +222,7 @@ Proof.
     unfold is_transitive.
     intros x y z.
     case x, y, z; unfold phi_matches;
-    intros [H1 H2]; try rewrite H1; auto.
+    intros H1 H2; try rewrite H1; auto.
 Qed.
 
 (* Phi_eq_j *)
@@ -360,21 +360,19 @@ Proof.
   split; intro H.
   + (* phi1 (X h) (X' i) -> phi2 (X h) (X' i) *)
   apply (P2tra _ (X i)).
-  split.
   * (* phi2 (X h) (X i) *)
   apply Hco2.
   apply Hco1.
-  apply (P1tra _ (X' i)).
+  apply (P1tra _ (X' i));
   auto.
   * (* phi2 (X i) (X' i) *)
   apply Hphi2.
   + (* phi2 (X h) (X' i) -> phi1 (X h) (X' i) *)
   apply (P1tra _ (X i)).
-  split.
   * (* phi1 (X h) (X i) *)
   apply Hco1.
   apply Hco2.
-  apply (P2tra _ (X' i)).
+  apply (P2tra _ (X' i));
   auto.
   * (* phi1 (X i) (X' i) *)
   apply Hphi1.
@@ -385,21 +383,19 @@ Proof.
   split; intro H.
   + (* phi1 (X i) Xtop -> phi2 (X i) Xtop *)
   apply (P2tra _ (X j)).
-  split.
   * (* phi2 (X i) (X j) *)
   apply Hco2.
   apply Hco1.
-  apply (P1tra _ Xtop).
+  apply (P1tra _ Xtop);
   auto.
   * (* phi2 (X j) Xtop *)
   auto.
   + (* phi2 (X i) Xtop -> phi1 (X i) Xtop *)
   apply (P1tra _ (X j)).
-  split.
   * (* phi1 (X i) (X j) *)
   apply Hco1.
   apply Hco2.
-  apply (P2tra _ Xtop).
+  apply (P2tra _ Xtop);
   auto.
   * (* phi1 (X j) Xtop *)
   auto.
@@ -435,49 +431,47 @@ Proof.
   split; intros H.
   + (* phi1 (X' h) (X' i) -> phi2 (X' h) (X' i) *)
   apply (P2tra _ (X h)).
-  split.
   * (* phi2 (X' h) (X h) *)
   apply P2sym.
   apply Hphi2.
   * (* phi2 (X h) (X' i) *)
-  apply (P2tra _ (X i)).
-  split; auto.
+  apply (P2tra _ (X i));
+  auto.
   apply Hco2.
   apply Hco1.
-  apply (P1tra _ (X' h)).
-  split; auto.
-  apply (P1tra _ (X' i)).
-  split; auto.
+  apply (P1tra _ (X' h));
+  auto.
+  apply (P1tra _ (X' i));
+  auto.
   + (* phi2 (X' h) (X' i) -> phi1 (X' h) (X' i) *)
   apply (P1tra _ (X h)).
-  split.
   * (* phi1 (X' h) (X h) *)
   apply P1sym.
   apply Hphi1.
   * (* phi1 (X h) (X' i) *)
-  apply (P1tra _ (X i)).
-  split; auto.
+  apply (P1tra _ (X i));
+  auto.
   apply Hco1.
   apply Hco2.
-  apply (P2tra _ (X' h)).
-  split; auto.
-  apply (P2tra _ (X' i)).
-  split; auto.
+  apply (P2tra _ (X' h));
+  auto.
+  apply (P2tra _ (X' i));
+  auto.
 
   - (* phi1 (X' i) Xtop <-> phi2 (X' i) Xtop *)
   split; intro H.
   + (* phi1 (X' i) Xtop -> phi2 (X' i) Xtop *)
-  apply (P2tra _ (X i)).
-  split; auto.
+  apply (P2tra _ (X i));
+  auto.
   apply HXiXtop.
-  apply (P1tra _ (X' i)).
-  split; auto.
+  apply (P1tra _ (X' i));
+  auto.
   + (* phi2 (X' i) Xtop -> phi1 (X' i) Xtop *)
-  apply (P1tra _ (X i)).
-  split; auto.
+  apply (P1tra _ (X i));
+  auto.
   apply HXiXtop.
-  apply (P2tra _ (X' i)).
-  split; auto.
+  apply (P2tra _ (X' i));
+  auto.
 
   - (* phi1 Xtop (X i) <-> phi2 Xtop (X i) *)
   split; intro H.
@@ -494,18 +488,18 @@ Proof.
   split; intro H.
   + (* phi1 Xtop (X' i) -> phi2 Xtop (X' i) *)
   apply P2sym.
-  apply (P2tra _ (X i)).
-  split; auto.
+  apply (P2tra _ (X i));
+  auto.
   apply HXiXtop.
-  apply (P1tra _ (X' i)).
-  split; auto.
+  apply (P1tra _ (X' i));
+  auto.
   + (* phi2 Xtop (X' i) -> phi1 Xtop (X' i) *)
   apply P1sym.
-  apply (P1tra _ (X i)).
-  split; auto.
+  apply (P1tra _ (X i));
+  auto.
   apply HXiXtop.
-  apply (P2tra _ (X' i)).
-  split; auto.
+  apply (P2tra _ (X' i));
+  auto.
 
   - (* phi1 Xtop Xtop <-> phi2 Xtop Xtop *)
   split; intro H; auto.
@@ -595,7 +589,7 @@ Proof.
   unfold two_Theta_D_models_Phi.
   intros [H1 [H2 [H3 [H4 H5]]]].
   unfold phi_to_Phi_eq_j.
-  split; auto.
+  auto.
 Qed.
 
 (* Composition *)
@@ -636,114 +630,98 @@ Proof.
   + intro i. case y.
   * intro j. case z.
   -- intros l; apply P1tra; apply P2tra.
-  -- intros l [H1 [l1 [H2 H3]]].
+  -- intros l H1 [l1 [H2 H3]].
   exists l1;
   split; try apply (P1tra _ (X j)); auto.
-  -- intros [H1 H2].
+  -- intros H1 H2.
   apply (P1tra _ (X j)); auto.
   * intro j. case z.
   -- intro l.
-  intros [[l1 [H11 H12]] [l2 [H21 H22]]].
-  apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  intros [l1 [H11 H12]] [l2 [H21 H22]].
+  apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   -- intro l.
-  intros [[l1 [H1 H2]] H3].
+  intros [l1 [H1 H2]] H3.
   exists l1.
   split; try apply (P2tra _ (X' j)); auto.
-  -- intros [[l1 [H11 H12]] [l2 [H21 H22]]].
-  apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  -- intros [l1 [H11 H12]] [l2 [H21 H22]].
+  apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   * case z.
   -- intro l. apply P1tra.
   -- intro l.
-  intros [H [l1 [H11 H12]]].
+  intros H [l1 [H11 H12]].
   exists l1.
   split; try apply (P1tra _ Xtop); auto.
   -- apply P1tra.
   + intro i. case y.
   * intro j. case z.
   -- intro l.
-  intros [[l1 [H11 H12]] H21].
+  intros [l1 [H11 H12]] H21.
   exists l1.
   split; auto.
-  apply (P1tra _ (X j));
-  auto.
+  apply (P1tra _ (X j)); auto.
   -- intro l.
-  intros [[l1 [H11 H12]] [l2 [H21 H22]]].
-  apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  intros [l1 [H11 H12]] [l2 [H21 H22]].
+  apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ (X l2)); auto.
   apply Hc.
-  apply (P1tra _ (X j));
-  split; auto.
-  -- intros [[l [H1 H2]] H3].
+  apply (P1tra _ (X j)); auto.
+  -- intros [l [H1 H2]] H3.
   exists l.
   split; try apply (P1tra _ (X j)); auto.
   * intro j. case z.
   -- intro l.
-  intros [H1 [l1 [H11 H12]]].
+  intros H1 [l1 [H11 H12]].
   exists l1.
   split; try apply (P2tra _ (X' j)); auto.
   -- intro l. apply P2tra.
-  -- intros [H1 [l [H2 H3]]].
+  -- intros H1 [l [H2 H3]].
   exists l.
   split; try apply (P2tra _ (X' j)); auto.
   * case z.
   -- intro l.
-  intros [[l1 [H1 H2]] H3].
+  intros [l1 [H1 H2]] H3.
   exists l1.
   split; try apply (P1tra _ Xtop); auto.
   -- intro l.
-  intros [[l1 [H11 H12]] [l2 [H21 H22]]].
-  apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  intros [l1 [H11 H12]] [l2 [H21 H22]].
+  apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ (X l2)); auto.
   apply Hc.
-  apply (P1tra _ Xtop);
-  split; auto.
-  -- intros [[l [H1 H2]] H3].
+  apply (P1tra _ Xtop); auto.
+  -- intros [l [H1 H2]] H3.
   exists l.
-  split; auto.
+  auto.
   + case y.
   * intro j. case z.
   -- intro l. apply P1tra.
   -- intro l.
-  intros [H1 [l1 [H2 H3]]].
+  intros H1 [l1 [H2 H3]].
   exists l1.
   split; try apply (P1tra _ (X j)); auto.
-  -- intros _. apply P1ref.
+  -- intros. apply P1ref.
   * intro j. case z.
   -- intro l.
-  intros [[l1 [H11 H12]] [l2 [H21 H22]]].
-  apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  intros [l1 [H11 H12]] [l2 [H21 H22]].
+  apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   -- intro l.
-  intros [[l1 [H11 H12]] H3].
+  intros [l1 [H11 H12]] H3.
   exists l1.
   split; try apply (P2tra _ (X' j)); auto.
-  -- intros _. apply P1ref.
+  -- intros. apply P1ref.
   * case z.
-  -- intros l [_ H]; auto.
-  -- intros l [_ [l1 [H1 H2]]].
+  -- intros; auto.
+  -- intros l _ [l1 [H1 H2]].
   exists l1.
-  split; auto.
+  auto.
   -- auto.
 Qed.
 
@@ -783,197 +761,154 @@ Proof.
   + intro i. case y.
   * intro j. case z.
   -- intros l; apply P1tra; apply P2tra.
-  -- intros l [H1 [[l1 [H2 H3]] | [H2 H3]]].
+  -- intros l H1 [[l1 [H2 H3]] | [H2 H3]].
   ++ left. exists l1;
   split; try apply (P1tra _ (X j)); auto.
   ++ right. split; auto.
-  apply (P1tra _ (X j)).
-  split; auto.
-  -- intros [H1 H2].
+  apply (P1tra _ (X j)); auto.
+  -- intros H1 H2.
   apply (P1tra _ (X j)); auto.
   * intro j. case z.
   -- intro l.
-  intros [[[l1 [H11 H12]] | [H11 H12]] [[l2 [H21 H22]] | [H21 H22]]].
-  ++ apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  intros [[l1 [H11 H12]] | [H11 H12]] [[l2 [H21 H22]] | [H21 H22]].
+  ++ apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
-  ++ apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ Xtop);
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
+  ++ apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ Xtop); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
-  ++ apply (P1tra _ Xtop);
-  split; auto.
-  apply (P1tra _ (X' l2)).
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
+  ++ apply (P1tra _ Xtop); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply P1sym. apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
-  ++ apply (P1tra _ Xtop);
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
+  ++ apply (P1tra _ Xtop); auto.
   -- intro l.
-  intros [H1 H3].
+  intros H1 H3.
   destruct H1 as [[l1 [H1 H2]] | [H1 H2]];
   [left; exists l1 | right];
   split; try apply (P2tra _ (X' j)); auto.
-  -- intros [H1 H2];
+  -- intros H1 H2;
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]];
   auto.
-  ++ apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  ++ apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   ++ unfold composableT in Hc.
   destruct Hc as [_ Hc].
-  apply (P1tra _ (X' l1)).
-  split; auto.
+  apply (P1tra _ (X' l1)); auto.
   apply Hc.
-  apply (P2tra _ (X' j)).
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   * case z.
   -- intro l. apply P1tra.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
   ++ left. exists l2.
   split; try apply (P1tra _ Xtop); auto.
-  ++ right. split; auto.
-  -- intros [H1 H2]; auto.
+  ++ right. auto.
+  -- intros; auto.
   + intro i. case y.
   * intro j. case z.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   [left; exists l1 | right];
   split; auto;
   apply (P1tra _ (X j));
   auto.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
-  ++ apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  ++ apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ (X l2)); auto.
   apply Hc.
-  apply (P1tra _ (X j));
-  split; auto.
-  ++ apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ Xtop);
-  split; auto.
+  apply (P1tra _ (X j)); auto.
+  ++ apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ Xtop); auto.
   apply Hc.
-  apply (P1tra _ (X j));
-  split; auto.
-  ++ apply (P2tra _ Xtop);
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  apply (P1tra _ (X j)); auto.
+  ++ apply (P2tra _ Xtop); auto.
+  apply (P2tra _ (X l2)); auto.
   apply P2sym.
   apply Hc.
-  apply (P1tra _ (X j));
-  split; auto.
-  ++ apply (P2tra _ Xtop);
-  split; auto.
-  -- intros [H1 H2].
+  apply (P1tra _ (X j)); auto.
+  ++ apply (P2tra _ Xtop); auto.
+  -- intros H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   [left; exists l1 | right];
   split; try apply (P1tra _ (X j)); auto.
   * intro j. case z.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]];
   [left; exists l2 | right];
   split; try apply (P2tra _ (X' j)); auto.
   -- intro l. apply P2tra.
-  -- intros [H1 H2].
+  -- intros H1 H2.
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]];
   [left; exists l2 | right];
   split; try apply (P2tra _ (X' j)); auto.
   * case z.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   [left; exists l1 | right];
   split; try apply (P1tra _ Xtop); auto.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
-  ++ apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  ++ apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ (X l2)); auto.
   apply Hc.
-  apply (P1tra _ Xtop);
-  split; auto.
-  ++ apply (P2tra _ (X l1));
-  split; auto.
-  apply (P2tra _ Xtop);
-  split; auto.
+  apply (P1tra _ Xtop); auto.
+  ++ apply (P2tra _ (X l1)); auto.
+  apply (P2tra _ Xtop); auto.
   apply Hc.
-  apply (P1tra _ Xtop);
-  split; auto.
-  ++ apply (P2tra _ Xtop);
-  split; auto.
-  apply (P2tra _ (X l2));
-  split; auto.
+  apply (P1tra _ Xtop); auto.
+  ++ apply (P2tra _ Xtop); auto.
+  apply (P2tra _ (X l2)); auto.
   apply P2sym.
   apply Hc.
-  apply (P1tra _ Xtop);
-  split; auto.
-  ++ apply (P2tra _ Xtop);
-  split; auto.
-  -- intros [H1 H2].
+  apply (P1tra _ Xtop); auto.
+  ++ apply (P2tra _ Xtop); auto.
+  -- intros H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   [left; exists l1 | right];
-  split; auto.
+  auto.
   + case y.
   * intro j. case z.
   -- intro l. apply P1tra.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]];
   [left; exists l2 | right];
   split; try apply (P1tra _ (X j)); auto.
-  -- intros _. apply P1ref.
+  -- intros. apply P1ref.
   * intro j. case z.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
-  ++ apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ (X' l2));
-  split; auto.
+  ++ apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ (X' l2)); auto.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
-  ++ apply (P1tra _ (X' l1));
-  split; auto.
-  apply (P1tra _ Xtop);
-  split; auto.
-  ++ apply (P1tra _ (X' l2));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
+  ++ apply (P1tra _ (X' l1)); auto.
+  apply (P1tra _ Xtop); auto.
+  ++ apply (P1tra _ (X' l2)); auto.
   apply P1sym.
   apply Hc.
-  apply (P2tra _ (X' j));
-  split; auto.
+  apply (P2tra _ (X' j)); auto.
   ++ apply P1sym; auto.
-  -- intros l [H1 H2].
+  -- intros l H1 H2.
   destruct H1 as [[l1 [H11 H12]] | [H11 H12]];
   [left; exists l1 | right];
   split; try apply (P2tra _ (X' j)); auto.
-  -- intros _. apply P1ref.
+  -- intros. apply P1ref.
   * case z.
-  -- intros l [_ H]; auto.
-  -- intros l [_ H2].
+  -- intros; auto.
+  -- intros l _ H2.
   destruct H2 as [[l2 [H21 H22]] | [H21 H22]];
   [left; exists l2 | right];
-  split; auto.
+  auto.
   -- auto.
 Qed.
 
@@ -1105,8 +1040,7 @@ Proof.
   rewrite<- H2.
   split.
   + intros [[l [H3 H4]] | [H3 H4]].
-  * apply (P2tra _ (X l)).
-  split; auto.
+  * apply (P2tra _ (X l)); auto.
   apply Hc1.
   auto.
   * auto.
@@ -1122,8 +1056,7 @@ Proof.
   right. auto.
   + rewrite<- H2.
   intros [[l [H31 H32]] | [H31 H32]].
-  * apply (P2tra _ (X l)).
-  split; auto.
+  * apply (P2tra _ (X l)); auto.
   apply Hc1.
   auto.
   * auto.
@@ -1189,8 +1122,7 @@ Proof.
   -- left; exists l2; split; auto.
      left; exists l1; split; auto.
   -- right; split; auto.
-  apply (P1tra _ (X' l1)).
-  split; auto.
+  apply (P1tra _ (X' l1)); auto.
   apply Hc1.
   auto.
   * destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
@@ -1203,8 +1135,7 @@ Proof.
   ++ left; exists l2; split; auto.
      left; exists l1; split; auto.
   ++ right; split; auto.
-  apply (P1tra _ (X' l1)).
-  split; auto.
+  apply (P1tra _ (X' l1)); auto.
   apply Hc1.
   auto.
   -- destruct H2 as [[l2 [H21 H22]] | [H21 H22]].
@@ -1495,7 +1426,7 @@ Proof.
   -- now unfold lat.
   -- intro j.
   unfold lat.
-  intros [H1 H2].
+  intros H1 H2.
   now rewrite H1.
   -- now unfold lat.
   * case z; now unfold lat.
