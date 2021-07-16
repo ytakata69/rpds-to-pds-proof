@@ -130,29 +130,39 @@ Definition lat (phi : Phi) : Phi :=
 
 (* models *)
 
+Class theta_d_theta'_models_phi (theta theta' : Theta) (d : D) (phi : Phi) :=
+  {
+    th_d_th'_xx  : forall i j, theta  i = theta  j <-> phi (X  i) (X  j);
+    th_d_th'_x'x': forall i j, theta' i = theta' j <-> phi (X' i) (X' j);
+    th_d_th'_xx' : forall i j, theta  i = theta' j <-> phi (X  i) (X' j);
+    th_d_th'_xt  : forall i,   theta  i = d <-> phi (X  i) Xtop;
+    th_d_th'_x't : forall i,   theta' i = d <-> phi (X' i) Xtop
+  }.
+Class theta_d_models_phi (theta : Theta) (d : D) (phi : Phi) :=
+  {
+    th_d_xx : forall i j, theta  i = theta  j <-> phi (X  i) (X  j);
+    th_d_xt : forall i,   theta  i = d <-> phi (X  i) Xtop
+  }.
+Class theta_models_phi (theta : Theta) (phi : Phi) :=
+  {
+    th_simp : is_simpl_rel phi;
+    th_xx   : forall i j, theta i = theta j <-> phi (X i) (X j)
+  }.
+
 Class Models (A B : Type) := { models : A -> B -> Prop }.
 Notation "S '|=' T" := (models S T) (at level 59).
-
+  
 Instance two_Theta_D_models_Phi : Models (Theta * D * Theta) Phi :=
   { models triple phi :=
       match triple with
-      | (theta, d, theta') =>
-          (forall i j, theta  i = theta  j <-> phi (X  i) (X  j)) /\
-          (forall i j, theta' i = theta' j <-> phi (X' i) (X' j)) /\
-          (forall i j, theta  i = theta' j <-> phi (X  i) (X' j)) /\
-          (forall i,   theta  i = d <-> phi (X  i) Xtop) /\
-          (forall i,   theta' i = d <-> phi (X' i) Xtop)
+      | (theta, d, theta') => theta_d_theta'_models_phi theta theta' d phi
       end }.
 Instance Theta_D_models_Phi : Models (Theta * D) Phi :=
   { models pair phi :=
-      match pair with
-      | (theta, d) =>
-          (forall i j, theta  i = theta  j <-> phi (X  i) (X  j)) /\
-          (forall i,   theta  i = d <-> phi (X  i) Xtop)
-      end }.
+      let (theta, d) := pair in
+      theta_d_models_phi theta d phi }.
 Instance Theta_models_Phi : Models Theta Phi :=
-  { models theta phi := is_simpl_rel phi /\
-                        forall i j, theta i = theta j <-> phi (X i) (X j) }.
+  { models theta phi := theta_models_phi theta phi }.
 
 
 (* Properties *)
@@ -214,7 +224,7 @@ Proof.
   destruct Hphi as [HphiT Hphi].
   unfold models in Hmo;
   unfold two_Theta_D_models_Phi in Hmo.
-  destruct Hmo as [HmoL [HmoR [HmoLR [HmoLT HmoRT]]]].
+  destruct Hmo as [HmoL HmoR HmoLR HmoLT HmoRT].
 
   split.
   - (* theta = theta' *)
@@ -277,7 +287,7 @@ Lemma composableT_implies_models_phi :
 Proof.
   intros phi1 phi2 theta1 theta2 z.
   intros Hphi1 Hc.
-  destruct Hphi1 as [_ [Hx'x' [_ [_ Hx't]]]].
+  destruct Hphi1 as [_ Hx'x' _ _ Hx't].
   destruct Hc as [Hc HcT].
   unfold composable in Hc.
   unfold models.
@@ -541,8 +551,9 @@ Proof.
   intros theta j phi z th.
   unfold models.
   unfold two_Theta_D_models_Phi.
-  intros [H1 [H2 [H3 [H4 H5]]]].
-  unfold phi_to_Phi_eq_j.
+  intros [H1 H2 H3 H4 H5].
+  split;
+  unfold phi_to_Phi_eq_j;
   auto.
 Qed.
 
@@ -1119,8 +1130,8 @@ Proof.
   unfold models.
   unfold two_Theta_D_models_Phi.
   intros H1 H2.
-  destruct H1 as [_ [H12 _]].
-  destruct H2 as [H21 _].
+  destruct H1 as [_ H12 _ _ _].
+  destruct H2 as [H21 _ _ _ _].
   unfold composable.
   intros i j.
   rewrite<- H12.
@@ -1138,8 +1149,8 @@ Proof.
   unfold models.
   unfold two_Theta_D_models_Phi.
   intros H1 H2.
-  destruct H1 as [_ [H12 [_ [_ H15]]]].
-  destruct H2 as [H21 [_ [_ [H24 _]]]].
+  destruct H1 as [_ H12 _ _ H15].
+  destruct H2 as [H21 _ _ H24 _].
   unfold composableT.
   split.
   - (* composable phi1 phi2 *)
@@ -1172,12 +1183,12 @@ Proof.
   unfold models in H2.
   unfold two_Theta_D_models_Phi in H1.
   unfold two_Theta_D_models_Phi in H2.
-  destruct H1 as [H11 [H12 [H13 [H14 H15]]]].
-  destruct H2 as [H21 [H22 [H23 [H24 H25]]]].
+  destruct H1 as [H11 H12 H13 H14 H15].
+  destruct H2 as [H21 H22 H23 H24 H25].
   unfold models.
   unfold two_Theta_D_models_Phi.
   unfold composition.
-  split; [| split; [| split; [| split]]].
+  split.
   - intros i j. auto.
   - intros i j. auto.
   - (* forall i j, theta1 i = theta3 j <->
@@ -1243,9 +1254,9 @@ Proof.
   unfold two_Theta_D_models_Phi.
   unfold compositionT.
   intros H1 H2.
-  destruct H1 as [H11 [H12 [H13 [H14 H15]]]].
-  destruct H2 as [H21 [H22 [H23 [H24 H25]]]].
-  split; auto; split; auto; [split; [| split]].
+  destruct H1 as [H11 H12 H13 H14 H15].
+  destruct H2 as [H21 H22 H23 H24 H25].
+  split; auto.
   - (* forall i j, theta1 i = theta3 j <->
        (exists l, phi1 (X i) (X' l) /\ phi2 (X l) (X' j)) \/
        (phi1 (X i) Xtop /\ phi2 Xtop (X' j)) *)
@@ -1278,9 +1289,6 @@ Proof.
   apply H25 in H2.
   rewrite H2.
   exact H1.
-  - (* forall i, theta1 i = d1 <-> phi1 (X i) Xtop *)
-  intros i.
-  split; intro H; apply H14; exact H.
   - (* forall i, theta3 i = d1 <->
        (exists l, phi1 Xtop (X' l) /\ phi2 (X l) (X' i)) \/
        (phi1 Xtop Xtop /\ phi2 Xtop (X' i)) *)
@@ -1385,7 +1393,7 @@ Proof.
   intros Hphi.
   unfold models in Hphi.
   unfold two_Theta_D_models_Phi in Hphi.
-  destruct Hphi as [_ [Hphi _]].
+  destruct Hphi as [_ Hphi _ _ _].
   unfold models.
   unfold Theta_models_Phi.
   split.
@@ -1408,7 +1416,7 @@ Proof.
   destruct Hphi' as [Hsimpl Hphi'].
   unfold models in Hphi.
   unfold two_Theta_D_models_Phi in Hphi.
-  destruct Hphi as [_ [Hphi _]].
+  destruct Hphi as [_ Hphi _ _ _].
 
   apply Phi_extensionality.
   intros x y.
