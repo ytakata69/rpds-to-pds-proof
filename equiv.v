@@ -65,14 +65,7 @@ Definition compositionT (phi1 phi2 : Phi) : Phi :=
 
 Parameter D : Set.
 Definition Theta := nat -> D.
-Definition Asgn := nat -> bool.  (* a subset of nat *)
-
-Definition update (theta : Theta) (asgn : Asgn) (d : D) : Theta :=
-  fun j : nat => if asgn j then d else theta j.
-
 Parameter bot : D.
-Definition theta_bot : Theta :=
-  fun _ => bot.
 
 Axiom Theta_extensionality :
   forall theta theta' : Theta,
@@ -161,34 +154,6 @@ Instance Theta_models_Phi : Models Theta Phi :=
   { models theta phi := is_simpl_rel phi /\
                         forall i j, theta i = theta j <-> phi (X i) (X j) }.
 
-(* Utilities *)
-
-Local Lemma not_true_is_false :
-  forall b : bool, b <> true <-> b = false.
-Proof.
-  intros b.
-  split.
-  - (* b <> true -> b = false *)
-  case b; try contradiction; auto.
-  - (* b = false -> b <> true *)
-  intros H.
-  rewrite H.
-  discriminate.
-Qed.
-
-Local Lemma false_eq_false :
-  forall b1 b2 : bool,
-  (b1 = true <-> b2 = true) -> b1 = false -> b2 = false.
-Proof.
-  intros b1 b2.
-  case b2;
-  intros [Heq1 Heq2] Hfalse;
-  auto.
-  assert (H : b1 = true).
-  { apply Heq2. reflexivity. }
-  rewrite H in Hfalse.
-  exact Hfalse.
-Qed.
 
 (* Properties *)
 
