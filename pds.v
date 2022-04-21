@@ -253,9 +253,9 @@ Proof.
   intros Hphi Hproper Hfrs_m Hfrs_s.
   unfold freshness_p_on_stack.
   unfold freshness_p_on_stack in Hfrs_s.
-  apply Forall3_cons.
-  - (* Forall2 ... ((z, zth) :: u) *)
-  apply Forall2_cons.
+  apply FOT_cons.
+  - (* ForallOrdPairs ... ((z, zth) :: u) *)
+  apply FOP_cons.
   + (* Forall ... u *)
   apply Forall_forall.
   intros [d1 th1] H1.
@@ -279,10 +279,10 @@ Proof.
   -- intros i j Hth1. now exists j.
   -- intros j Hd1. now exists j.
 
-  + (* Forall2 ... u *)
+  + (* ForallOrdPairs ... u *)
   induction u as [| [d1 th1] u IHu].
-  { apply Forall2_nil. }
-  apply Forall2_cons.
+  { apply FOP_nil. }
+  apply FOP_cons.
   * (* Forall ... u *)
   apply Forall_forall.
   intros [d2 th2] H2.
@@ -312,14 +312,14 @@ Proof.
   apply Hfor.
   exact H2.
 
-  * (* Forall2 ... u *)
+  * (* ForallOrdPairs ... u *)
   apply IHu.
   -- now apply (substack_is_proper_stack (d1, th1) ((z, zth) :: nil)).
   -- now apply (substack_keeps_freshness_p_on_moveA _ _ _ (d1,th1) ((z,zth)::nil)).
-  -- now apply (Forall3_sublist _ (d1, th1) ((bot,theta)::(z,zth)::nil)).
+  -- now apply (FOT_sublist _ (d1, th1) ((bot,theta)::(z,zth)::nil)).
 
-  - (* Forall3 ... ((z, zth) :: u) *)
-  now apply (Forall3_sublist _ (bot, theta) nil).
+  - (* ForallOrdTriples ... ((z, zth) :: u) *)
+  now apply (FOT_sublist _ (bot, theta) nil).
 Qed.
 
 Lemma moveA_keeps_freshness_p :
@@ -565,7 +565,7 @@ Proof.
   rewrite<- EQu in Hfresh'.
   rewrite<- EQuu in Hfresh'.
   unfold freshness_p_on_stack in Hfresh'.
-  apply Forall3_hd3 in Hfresh'.
+  apply FOT_hd3 in Hfresh'.
   unfold freshness_p_on_triple in Hfresh'.
   rewrite EQth1.
   exact Hfresh'.
@@ -856,7 +856,7 @@ Proof.
   apply in_eq.
   -- (* freshness_p th0 d0 th1 theta' *)
   unfold freshness_p_on_stack in Hfresh'.
-  apply Forall3_hd3 in Hfresh'.
+  apply FOT_hd3 in Hfresh'.
   unfold freshness_p_on_triple in Hfresh'.
   exact Hfresh'.
   -- (* (th1, z, theta') |= compositionT ... *)

@@ -11,6 +11,15 @@ Require Export Lists.List.
 
 Local Open Scope type_scope.  (* for '*' *)
 
+(* cf. the definition of ForallOrdPairs in Coq.Lists.List *)
+Inductive ForallOrdTriples {A : Type} (R : A -> A -> A -> Prop)
+  : list A -> Prop :=
+  | FOT_nil : ForallOrdTriples R nil
+  | FOT_cons a l :
+    ForallOrdPairs (R a) l -> ForallOrdTriples R l
+    -> ForallOrdTriples R (a :: l).
+
+
 (* finite control states *)
 
 Parameter Q : Set.
@@ -89,18 +98,6 @@ Inductive config_R_config'
 
 (* freshness_p on stack *)
 
-Inductive Forall2 {X : Type} (P : X -> X -> Prop)
-  : list X -> Prop :=
-  | Forall2_nil : Forall2 P nil
-  | Forall2_cons x l :
-    Forall (P x) l -> Forall2 P l -> Forall2 P (x :: l).
-
-Inductive Forall3 {X : Type} (P : X -> X -> X -> Prop)
-  : list X -> Prop :=
-  | Forall3_nil : Forall3 P nil
-  | Forall3_cons x l :
-    Forall2 (P x) l -> Forall3 P l -> Forall3 P (x :: l).
-
 Definition freshness_p_on_triple
   (p3 p2 p1 : D * Theta) :=
   match (p3, p2, p1) with
@@ -109,20 +106,20 @@ Definition freshness_p_on_triple
   end.
 
 Definition freshness_p_on_stack theta stack :=
-  Forall3 freshness_p_on_triple ((bot, theta) :: stack).
+  ForallOrdTriples freshness_p_on_triple ((bot, theta) :: stack).
 
 Local Example forall2_example_1 :
-  Forall2 le (0 :: 1 :: 3 :: 8 :: nil).
+  ForallOrdPairs le (0 :: 1 :: 3 :: 8 :: nil).
 Proof.
-  repeat apply Forall2_cons;
+  repeat apply FOP_cons;
   repeat apply Forall_cons;
   repeat (apply le_S; try apply le_n); auto;
-  try apply Forall2_nil.
+  try apply FOP_nil.
 Qed.
 
 (* Lemmas *)
 
-(* Forall, Forall2, Forall3 *)
+(* Forall, ForallOrdPairs, ForallOrdTriples *)
 
 Lemma Forall_sublist {A : Type} :
   forall p (a : A) u1 u2,
@@ -144,10 +141,10 @@ Proof.
   apply Forall_cons; auto.
 Qed.
 
-Local Lemma Forall2_sublist {A : Type} :
+Local Lemma FOP_sublist {A : Type} :
   forall p (a : A) u1 u2,
-  Forall2 p (u1 ++ (a :: u2)) ->
-  Forall2 p (u1 ++ u2).
+  ForallOrdPairs p (u1 ++ (a :: u2)) ->
+  ForallOrdPairs p (u1 ++ u2).
 Proof.
   intros p a u1 u2.
   induction u1 as [| b u1 IHu1].
@@ -161,17 +158,17 @@ Proof.
   intros Hfor2.
   inversion Hfor2 as [| x l Hfor Hfor2' [EQx EQl]].
   clear x EQx l EQl.
-  apply Forall2_cons.
+  apply FOP_cons.
   + (* Forall ... *)
   now apply Forall_sublist with a.
-  + (* Forall2 ... *)
+  + (* ForallOrdPairs ... *)
   now apply IHu1.
 Qed.
 
-Lemma Forall3_sublist {A : Type} :
+Lemma FOT_sublist {A : Type} :
   forall p (a : A) u1 u2,
-  Forall3 p (u1 ++ (a :: u2)) ->
-  Forall3 p (u1 ++ u2).
+  ForallOrdTriples p (u1 ++ (a :: u2)) ->
+  ForallOrdTriples p (u1 ++ u2).
 Proof.
   intros p a u1 u2.
   induction u1 as [| b u1 IHu1].
@@ -185,16 +182,16 @@ Proof.
   intros Hfor3.
   inversion Hfor3 as [| x l Hfor2 Hfor3' [EQx EQl]].
   clear x EQx l EQl.
-  apply Forall3_cons.
+  apply FOT_cons.
   + (* Forall ... *)
-  now apply Forall2_sublist with a.
-  + (* Forall2 ... *)
+  now apply FOP_sublist with a.
+  + (* ForallOrdPairs ... *)
   now apply IHu1.
 Qed.
 
-Local Lemma Forall2_hd2 {A : Type} :
+Local Lemma FOP_hd2 {A : Type} :
   forall p (a : A) b u,
-  Forall2 p (a :: b :: u) ->
+  ForallOrdPairs p (a :: b :: u) ->
   p a b.
 Proof.
   intros p a b u H.
@@ -204,15 +201,15 @@ Proof.
   exact H.
 Qed.
 
-Lemma Forall3_hd3 {A : Type} :
+Lemma FOT_hd3 {A : Type} :
   forall p (a : A) b c u,
-  Forall3 p (a :: b :: c :: u) ->
+  ForallOrdTriples p (a :: b :: c :: u) ->
   p a b c.
 Proof.
   intros p a b c u H.
   inversion H as [| x l Hfor2 Hfor3' [EQx EQl]].
   clear x EQx l EQl Hfor3' H.
-  apply Forall2_hd2 with u.
+  apply FOP_hd2 with u.
   exact Hfor2.
 Qed.
  
@@ -240,7 +237,7 @@ Proof.
   clear x l EQx EQl Hfor3.
   inversion Hfor3' as [| x l Hfor2' Hfor3 [EQx EQl]].
   clear x l EQx EQl Hfor3'.
-  now apply Forall3_cons.
+  now apply FOT_cons.
 Qed.
 
 Lemma substack_keeps_freshness_p :
@@ -251,7 +248,7 @@ Proof.
   intros theta a u1 u2.
   unfold freshness_p_on_stack.
   repeat rewrite app_comm_cons.
-  apply Forall3_sublist.
+  apply FOT_sublist.
 Qed.
 
 Lemma push_keeps_freshness_p :
@@ -262,9 +259,9 @@ Proof.
   intros theta u z.
   unfold freshness_p_on_stack.
   intros H.
-  apply Forall3_cons.
-  - (* Forall2 ... ((z, theta) :: u) *)
-  apply Forall2_cons.
+  apply FOT_cons.
+  - (* ForallOrdPairs ... ((z, theta) :: u) *)
+  apply FOP_cons.
   + (* Forall ... u *)
   apply Forall_forall.
   intros [d1 th1] Hth1.
@@ -287,19 +284,19 @@ Proof.
   intros j H1.
   exists j.
   exact H1.
-  + (* Forall2 ... u *)
+  + (* ForallOrdPairs ... u *)
   inversion H as [| x l Hfor2 Hfor3 [EQx EQl]].
   clear x EQx l EQl Hfor3.
   exact Hfor2.
 
-  - (* Forall3 ... ((theta j, ) :: u) *)
-  apply Forall3_cons.
-  + (* Forall2 ... u *)
+  - (* ForallOrdTriples ... ((theta j, ) :: u) *)
+  apply FOT_cons.
+  + (* ForallOrdPairs ... u *)
   induction u as [| [d1 th1] u IHu].
   * (* u = nil -> ... *)
-  apply Forall2_nil.
+  apply FOP_nil.
   * (* u = (d1, th1) :: u -> ... *)
-  apply Forall2_cons.
+  apply FOP_cons.
   -- (* Forall ... u *)
   apply Forall_forall.
   intros [d2 th2] Hth2.
@@ -312,13 +309,13 @@ Proof.
   unfold freshness_p_on_triple in Hfor.
   apply (Hfor (d2, th2)).
   exact Hth2.
-  -- (* Forall2 ... u *)
+  -- (* ForallOrdPairs ... u *)
   apply IHu.
-  apply (Forall3_sublist _ (d1, th1) ((bot, theta) :: nil)).
+  apply (FOT_sublist _ (d1, th1) ((bot, theta) :: nil)).
   unfold app.
   exact H.
-  + (* Forall3 ... u *)
-  apply (Forall3_sublist _ (bot, theta) nil).
+  + (* ForallOrdTriples ... u *)
+  apply (FOT_sublist _ (bot, theta) nil).
   unfold app.
   exact H.
 Qed.
